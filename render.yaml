@@ -1,0 +1,12 @@
+# Luminalis - Render Blueprint (Spring Boot)
+services:
+  - type: web
+    name: luminalis
+    runtime: docker
+    rootDir: .
+    plan: free
+    autoDeploy: true
+    envVars:
+      - key: JWT_SECRET
+        generateValue: true
+

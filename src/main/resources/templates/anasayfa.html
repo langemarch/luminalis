@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Luminalis - Günlük Burç Yorumları ve Doğum Haritası</title>
+    <link rel="stylesheet" th:href="@{/css/site.css}"/>
+</head>
+<body>
+
+<div class="navbar">
+    <a th:href="@{/}" class="navbar-brand">Luminalis</a>
+    <div class="navbar-links">
+        <a th:href="@{/}" class="active">Ana Sayfa</a>
+        <a th:href="@{/burclar}">Burç Yorumları</a>
+        <a th:href="@{/dogum-haritasi}">Doğum Haritası</a>
+        <a th:href="@{/fal}">Tarot ve Kahve Falı</a>
+        <a th:href="@{/uyum}">İlişki Uyumu</a>
+        <a th:href="@{/gunluk}">Notlarım</a>
+    </div>
+    <div class="navbar-auth">
+        <span th:if="${kullaniciEmail != null}">
+            <span class="user-badge" th:text="${kullaniciEmail}">kullanici@ornek.com</span>
+            <form th:action="@{/logout}" method="post" style="display:inline;margin-left:8px;">
+                <button type="submit" class="btn-logout">Çıkış Yap</button>
+            </form>
+        </span>
+        <span th:if="${kullaniciEmail == null}">
+            <a th:href="@{/login}">Giriş Yap</a>
+            <a th:href="@{/kayit}" style="background-color:#15803d;">Kayıt Ol</a>
+        </span>
+    </div>
+</div>
+
+<div class="container">
+    <!-- 12 BURÇ HIZLI SEÇİM ÇUBUĞU -->
+    <div class="card" style="padding:12px 16px;margin-bottom:16px;">
+        <div class="zodiac-bar">
+            <span style="font-weight:700;color:#1b3266;font-size:13.5px;">12 Burç Günlük Yorumu:</span>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                <a th:href="@{/burclar(burc='Koç')}" class="zodiac-btn">Koç</a>
+                <a th:href="@{/burclar(burc='Boğa')}" class="zodiac-btn">Boğa</a>
+                <a th:href="@{/burclar(burc='İkizler')}" class="zodiac-btn">İkizler</a>
+                <a th:href="@{/burclar(burc='Yengeç')}" class="zodiac-btn">Yengeç</a>
+                <a th:href="@{/burclar(burc='Aslan')}" class="zodiac-btn">Aslan</a>
+                <a th:href="@{/burclar(burc='Başak')}" class="zodiac-btn">Başak</a>
+                <a th:href="@{/burclar(burc='Terazi')}" class="zodiac-btn">Terazi</a>
+                <a th:href="@{/burclar(burc='Akrep')}" class="zodiac-btn">Akrep</a>
+                <a th:href="@{/burclar(burc='Yay')}" class="zodiac-btn">Yay</a>
+                <a th:href="@{/burclar(burc='Oğlak')}" class="zodiac-btn">Oğlak</a>
+                <a th:href="@{/burclar(burc='Kova')}" class="zodiac-btn">Kova</a>
+                <a th:href="@{/burclar(burc='Balık')}" class="zodiac-btn">Balık</a>
+            </div>
+        </div>
+    </div>
+
+    <h1 class="page-title">Günlük Burç Yorumları ve Doğum Haritası</h1>
+
+    <!-- ELEMENT FİLTRESİ -->
+    <div class="filter-bar">
+        <a th:href="@{/}" class="filter-pill" th:classappend="${seciliElement == 'Tümü'} ? ' active' : ''">Tüm Burçlar (12)</a>
+        <a th:href="@{/(element='Ateş')}" class="filter-pill" th:classappend="${seciliElement == 'Ateş'} ? ' active' : ''">Ateş Grubu</a>
+        <a th:href="@{/(element='Toprak')}" class="filter-pill" th:classappend="${seciliElement == 'Toprak'} ? ' active' : ''">Toprak Grubu</a>
+        <a th:href="@{/(element='Hava')}" class="filter-pill" th:classappend="${seciliElement == 'Hava'} ? ' active' : ''">Hava Grubu</a>
+        <a th:href="@{/(element='Su')}" class="filter-pill" th:classappend="${seciliElement == 'Su'} ? ' active' : ''">Su Grubu</a>
+    </div>
+
+    <div class="grid-main">
+        <!-- SOL: 12 GÜNLÜK BURÇ YORUMU LİSTESİ -->
+        <div>
+            <div th:each="modul : ${moduller}" class="card">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:14px;">
+                    <div>
+                        <h3 th:text="${modul.baslik}" style="margin-bottom:5px;font-size:17px;">Burç Başlığı</h3>
+                        <p class="muted" th:text="${modul.altBaslik}" style="margin-bottom:8px;">Günlük burç yorumu</p>
+                        <span class="badge"
+                              th:classappend="${modul.kategori.ad.contains('Ateş')} ? ' badge-ates' : (${modul.kategori.ad.contains('Toprak')} ? ' badge-toprak' : (${modul.kategori.ad.contains('Hava')} ? ' badge-hava' : ' badge-su'))"
+                              th:text="${modul.kategori.ad}">Element Grubu</span>
+                    </div>
+                    <div style="flex-shrink:0;display:flex;gap:6px;align-items:center;">
+                        <a th:href="@{/burclar(burc=${modul.tur})}" class="btn-sm">Detaylı Oku</a>
+                        <form th:action="@{/takip/ekle}" method="post" style="margin:0;">
+                            <input type="hidden" name="modulId" th:value="${modul.id}"/>
+                            <button type="submit" class="btn">Favorilerime Kaydet</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SAĞ: FAVORİ BURÇLARIM, RAPORLARIM VE HIZLI DOĞUM HARİTASI -->
+        <div>
+            <div class="card">
+                <h3>Favori Burçlarım ve Takip Listem</h3>
+
+                <div th:if="${arsivUrunleri != null}">
+                    <div th:if="${#lists.isEmpty(arsivUrunleri)}" class="alert-info">
+                        Henüz favorilerinize eklediğiniz bir burç yorumu bulunmuyor. Soldaki listeden kendi burcunuzu veya yakınlarınızın burcunu kaydedebilirsiniz.
+                    </div>
+
+                    <table class="table" th:if="${!#lists.isEmpty(arsivUrunleri)}">
+                        <thead>
+                        <tr>
+                            <th>Kayıtlı Burç</th>
+                            <th>Element</th>
+                            <th>İşlem</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="u : ${arsivUrunleri}">
+                            <td>
+                                <a th:href="@{/burclar(burc=${u.modul.tur})}" th:text="${u.modul.baslik}" style="color:#1e3a8a;font-weight:600;text-decoration:none;">Burç</a>
+                            </td>
+                            <td th:text="${u.modul.kategori.ad}" style="font-size:12px;font-weight:600;">Ateş Grubu</td>
+                            <td>
+                                <form th:action="@{/takip/sil}" method="post" style="display:inline;">
+                                    <input type="hidden" name="urunId" th:value="${u.id}"/>
+                                    <button type="submit" class="btn-sm btn-danger">Kaldır</button>
+                                </form>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+
+                    <div th:if="${!#lists.isEmpty(arsivUrunleri)}" style="margin-top:14px;">
+                        <form th:action="@{/ozet/olustur}" method="post">
+                            <button type="submit" class="btn-green">Kişisel Gökyüzü Raporu Oluştur</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div th:if="${arsivUrunleri == null}">
+                    <p class="muted">Burcunuzu ve yükseleninizi favorilerinize kaydetmek, doğum haritanızı saklamak ve kişisel gökyüzü raporu oluşturmak için giriş yapın.</p>
+                    <a th:href="@{/login}" class="btn">Giriş Yap</a>
+                    <a th:href="@{/kayit}" class="btn-sm" style="margin-left:6px;">Yeni Hesap Oluştur</a>
+                </div>
+            </div>
+
+            <div class="card" th:if="${raporlar != null and !#lists.isEmpty(raporlar)}">
+                <h3>Kişisel Gökyüzü Raporlarım</h3>
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>Rapor No</th>
+                        <th>Durum</th>
+                        <th>Kapsam</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="r : ${raporlar}">
+                        <td th:text="'#' + ${r.id}">#1</td>
+                        <td th:text="${r.durum}" style="color:#15803d;font-weight:700;">HAZIRLANDI</td>
+                        <td th:text="${r.toplamAdet} + ' Burç Analizi'">2 Burç Analizi</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <h3>Hızlı Doğum Haritası Hesaplama</h3>
+                <p class="muted" style="font-size:13px;">Doğum bilgilerinize göre Güneş, Ay, Yükselen burcunuzu ve 12 ev yerleşiminizi öğrenin.</p>
+                <form th:action="@{/dogum-haritasi}" method="post">
+                    <div class="form-group" style="margin-bottom:10px;">
+                        <label for="hizliTarih">Doğum Tarihi</label>
+                        <input type="date" id="hizliTarih" name="dogumTarihi" class="form-control" value="1998-05-15" required="required"/>
+                    </div>
+                    <div class="form-group" style="margin-bottom:10px;">
+                        <label for="hizliSaat">Doğum Saati</label>
+                        <input type="time" id="hizliSaat" name="dogumSaati" class="form-control" value="14:30" required="required"/>
+                    </div>
+                    <div class="form-group" style="margin-bottom:12px;">
+                        <label for="hizliSehir">Doğum Şehri (81 İl)</label>
+                        <select id="hizliSehir" name="dogumYeri" class="form-control">
+                            <option th:each="s : ${sehirler}" th:value="${s}" th:text="${s}" th:selected="${s == 'İstanbul'}"></option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn" style="width:100%;">Doğum Haritamı Hesapla</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="footer">
+    Luminalis &copy; 2026 — Astroloji, Günlük Burç Yorumları ve Doğum Haritası Platformu
+</div>
+
+</body>
+</html>

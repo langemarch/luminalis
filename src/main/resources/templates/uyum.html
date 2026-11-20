@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>İlişki Uyumu (Sinastri) - Luminalis</title>
+    <link rel="stylesheet" th:href="@{/css/site.css}"/>
+</head>
+<body>
+
+<div class="navbar">
+    <a th:href="@{/}" class="navbar-brand">Luminalis</a>
+    <div class="navbar-links">
+        <a th:href="@{/}">Ana Sayfa</a>
+        <a th:href="@{/burclar}">Burç Yorumları</a>
+        <a th:href="@{/dogum-haritasi}">Doğum Haritası</a>
+        <a th:href="@{/fal}">Tarot ve Kahve Falı</a>
+        <a th:href="@{/uyum}" class="active">İlişki Uyumu</a>
+        <a th:href="@{/gunluk}">Notlarım</a>
+    </div>
+    <div class="navbar-auth">
+        <span th:if="${kullaniciEmail != null}">
+            <span class="user-badge" th:text="${kullaniciEmail}"></span>
+            <form th:action="@{/logout}" method="post" style="display:inline;margin-left:8px;">
+                <button type="submit" class="btn-logout">Çıkış Yap</button>
+            </form>
+        </span>
+        <span th:if="${kullaniciEmail == null}">
+            <a th:href="@{/login}">Giriş Yap</a>
+            <a th:href="@{/kayit}" style="background-color:#15803d;">Kayıt Ol</a>
+        </span>
+    </div>
+</div>
+
+<div class="container">
+    <h1 class="page-title">İlişki ve Burç Uyumu (Sinastri) Hesaplama</h1>
+
+    <div class="card">
+        <h3>Kişi Bilgileri Formu</h3>
+        <form th:action="@{/uyum}" method="post" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:14px;align-items:flex-end;">
+            <div class="form-group" style="margin-bottom:0;">
+                <label for="kisi1Ad">1. Kişi Adı</label>
+                <input type="text" id="kisi1Ad" name="kisi1Ad" class="form-control" th:value="${kisi1Ad}" required="required"/>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+                <label for="kisi1Tarih">1. Kişi Doğum Tarihi</label>
+                <input type="date" id="kisi1Tarih" name="kisi1Tarih" class="form-control" th:value="${kisi1Tarih}" required="required"/>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+                <label for="kisi2Ad">2. Kişi Adı</label>
+                <input type="text" id="kisi2Ad" name="kisi2Ad" class="form-control" th:value="${kisi2Ad}" required="required"/>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+                <label for="kisi2Tarih">2. Kişi Doğum Tarihi</label>
+                <input type="date" id="kisi2Tarih" name="kisi2Tarih" class="form-control" th:value="${kisi2Tarih}" required="required"/>
+            </div>
+            <div>
+                <button type="submit" id="uyumHesaplaBtn" class="btn">Uyumu Hesapla</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:8px;">
+            <h3 style="margin:0;">Uyum Yüzdeleri ve Değerlendirme</h3>
+            <div style="display:flex;gap:8px;">
+                <span class="badge badge-hava" th:text="${kisi1Ad} + ': ' + ${kisi1Burc}">Ahmet: Aslan</span>
+                <span class="badge badge-su" th:text="${kisi2Ad} + ': ' + ${kisi2Burc}">Zeynep: Akrep</span>
+            </div>
+        </div>
+        <p th:text="${uyumOzeti}"></p>
+        <div class="grid-4" style="margin-bottom:16px;">
+            <div class="stat-box">
+                <div class="stat-label">Genel Uyum</div>
+                <div class="stat-value" th:text="'%' + ${genelUyum}">%84</div>
+                <div class="progress-track"><div class="progress-fill" th:style="'width:' + ${genelUyum} + '%'"></div></div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Sevgi ve Duygusal Bağ</div>
+                <div class="stat-value" th:text="'%' + ${sevgiUyumu}">%86</div>
+                <div class="progress-track"><div class="progress-fill" th:style="'width:' + ${sevgiUyumu} + '%;background-color:#dc2626;'"></div></div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">İletişim Uyumu</div>
+                <div class="stat-value" th:text="'%' + ${iletisimUyumu}">%82</div>
+                <div class="progress-track"><div class="progress-fill" th:style="'width:' + ${iletisimUyumu} + '%;background-color:#15803d;'"></div></div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Karşılıklı Güven</div>
+                <div class="stat-value" th:text="'%' + ${guvenUyumu}">%85</div>
+                <div class="progress-track"><div class="progress-fill" th:style="'width:' + ${guvenUyumu} + '%;background-color:#0e7490;'"></div></div>
+            </div>
+        </div>
+
+        <table class="table">
+            <thead>
+            <tr>
+                <th>1. Kişi Gezegeni</th>
+                <th>2. Kişi Gezegeni</th>
+                <th>Açı Türü</th>
+                <th>Açıklama</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="c : ${caprazAcilar}">
+                <td th:text="${c.kisi1}" style="font-weight:bold;"></td>
+                <td th:text="${c.kisi2}" style="font-weight:bold;"></td>
+                <td th:text="${c.aci}"></td>
+                <td th:text="${c.yorum}"></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="footer">
+    Luminalis &copy; 2026 — Astroloji, Günlük Burç Yorumları ve Doğum Haritası Platformu
+</div>
+
+</body>
+</html>

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Kullanıcı Girişi - Luminalis</title>
+    <link rel="stylesheet" th:href="@{/css/site.css}"/>
+</head>
+<body>
+
+<div class="navbar">
+    <a th:href="@{/}" class="navbar-brand">Luminalis</a>
+    <div class="navbar-links">
+        <a th:href="@{/}">Ana Sayfa</a>
+        <a th:href="@{/burclar}">Burç Yorumları</a>
+        <a th:href="@{/dogum-haritasi}">Doğum Haritası</a>
+        <a th:href="@{/fal}">Tarot ve Kahve Falı</a>
+        <a th:href="@{/uyum}">İlişki Uyumu</a>
+    </div>
+    <div class="navbar-auth">
+        <a th:href="@{/kayit}" style="background-color:#15803d;">Kayıt Ol</a>
+    </div>
+</div>
+
+<div class="auth-wrapper">
+    <div class="card">
+        <h2>Kullanıcı Girişi</h2>
+        <p class="muted">Kayıtlı e-posta adresiniz ve şifreniz ile oturum açın.</p>
+
+        <div th:if="${param.error}" class="alert-error">
+            Girdiğiniz e-posta adresi veya şifre hatalı.
+        </div>
+        <div th:if="${param.kayit}" class="alert-success">
+            Kaydınız tamamlandı. Şimdi giriş yapabilirsiniz.
+        </div>
+
+        <form th:action="@{/login}" method="post">
+            <div class="form-group">
+                <label for="username">E-posta Adresi</label>
+                <input type="email" id="username" name="username" class="form-control" placeholder="ornek@eposta.com" required/>
+            </div>
+            <div class="form-group">
+                <label for="password">Şifre</label>
+                <input type="password" id="password" name="password" class="form-control" required/>
+            </div>
+            <button type="submit" class="btn" style="width:100%;padding:10px;">Giriş Yap</button>
+        </form>
+
+        <p style="margin-top:14px;margin-bottom:0;font-size:14px;text-align:center;">
+            Henüz hesabınız yok mu? <a th:href="@{/kayit}" id="kayitLink">Kayıt Ol</a>
+        </p>
+    </div>
+</div>
+
+<div class="footer">
+    Luminalis &copy; 2026 — Astroloji, Günlük Burç Yorumları ve Doğum Haritası Platformu
+</div>
+
+</body>
+</html>

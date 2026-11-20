@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Burç Yorumları - Luminalis</title>
+    <link rel="stylesheet" th:href="@{/css/site.css}"/>
+</head>
+<body>
+
+<div class="navbar">
+    <a th:href="@{/}" class="navbar-brand">Luminalis</a>
+    <div class="navbar-links">
+        <a th:href="@{/}">Ana Sayfa</a>
+        <a th:href="@{/burclar}" class="active">Burç Yorumları</a>
+        <a th:href="@{/dogum-haritasi}">Doğum Haritası</a>
+        <a th:href="@{/fal}">Tarot ve Kahve Falı</a>
+        <a th:href="@{/uyum}">İlişki Uyumu</a>
+        <a th:href="@{/gunluk}">Notlarım</a>
+    </div>
+    <div class="navbar-auth">
+        <span th:if="${kullaniciEmail != null}">
+            <span class="user-badge" th:text="${kullaniciEmail}"></span>
+            <form th:action="@{/logout}" method="post" style="display:inline;margin-left:8px;">
+                <button type="submit" class="btn-logout">Çıkış Yap</button>
+            </form>
+        </span>
+        <span th:if="${kullaniciEmail == null}">
+            <a th:href="@{/login}">Giriş Yap</a>
+            <a th:href="@{/kayit}" style="background-color:#15803d;">Kayıt Ol</a>
+        </span>
+    </div>
+</div>
+
+<div class="container">
+    <h1 class="page-title">12 Burç Günlük, Haftalık ve Aylık Yorumları</h1>
+
+    <div class="card" style="padding:12px 16px;">
+        <div class="zodiac-bar">
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                <a th:each="b : ${burclar}"
+                   th:href="@{/burclar(burc=${b}, donem=${seciliDonem})}"
+                   th:text="${b}"
+                   class="zodiac-btn"
+                   th:classappend="${b == seciliBurc} ? ' active' : ''">Burç</a>
+            </div>
+            <div style="display:flex;gap:6px;">
+                <a th:href="@{/burclar(burc=${seciliBurc}, donem='Günlük')}" class="filter-pill" th:classappend="${seciliDonem == 'Günlük'} ? ' active' : ''">Günlük</a>
+                <a th:href="@{/burclar(burc=${seciliBurc}, donem='Haftalık')}" class="filter-pill" th:classappend="${seciliDonem == 'Haftalık'} ? ' active' : ''">Haftalık</a>
+                <a th:href="@{/burclar(burc=${seciliBurc}, donem='Aylık')}" class="filter-pill" th:classappend="${seciliDonem == 'Aylık'} ? ' active' : ''">Aylık</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid-main">
+        <div>
+            <div class="card">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                    <h2 th:text="${seciliBurc} + ' Burcu ' + ${seciliDonem} + ' Yorumu'" style="margin:0;">Koç Burcu Günlük Yorumu</h2>
+                    <span class="badge badge-hava" th:text="${tarihAraligi}">21 Mart - 20 Nisan</span>
+                </div>
+                <p th:text="${genelYorum}" style="font-size:15px;margin-bottom:16px;"></p>
+
+                <div class="grid-3" style="margin-bottom:16px;">
+                    <div class="card" style="margin-bottom:0;background-color:#f8fafc;">
+                        <h3 style="font-size:15px;color:#1b3266;">Aşk ve İlişkiler</h3>
+                        <p th:text="${askYorumu}" class="muted" style="margin-bottom:0;font-size:13.5px;"></p>
+                    </div>
+                    <div class="card" style="margin-bottom:0;background-color:#f8fafc;">
+                        <h3 style="font-size:15px;color:#1b3266;">İş ve Kariyer</h3>
+                        <p th:text="${kariyerYorumu}" class="muted" style="margin-bottom:0;font-size:13.5px;"></p>
+                    </div>
+                    <div class="card" style="margin-bottom:0;background-color:#f8fafc;">
+                        <h3 style="font-size:15px;color:#1b3266;">Sağlık ve Enerji</h3>
+                        <p th:text="${saglikYorumu}" class="muted" style="margin-bottom:0;font-size:13.5px;"></p>
+                    </div>
+                </div>
+
+                <table class="table">
+                    <tbody>
+                    <tr>
+                        <th style="width:190px;">Element ve Nitelik</th>
+                        <td th:text="${element} + ' Grubu — ' + ${nitelik}">Ateş — Öncü</td>
+                    </tr>
+                    <tr>
+                        <th>Yönetici Gezegen</th>
+                        <td th:text="${gezegen}">Mars</td>
+                    </tr>
+                    <tr>
+                        <th>Odak Konusu</th>
+                        <td th:text="${odakKonusu}"></td>
+                    </tr>
+                    <tr>
+                        <th>Günün Tavsiyesi</th>
+                        <td th:text="${tavsiye}"></td>
+                    </tr>
+                    <tr>
+                        <th>Uyumlu Burçlar</th>
+                        <td th:text="${uyumluBurclar}">Aslan, Yay</td>
+                    </tr>
+                    <tr>
+                        <th>Uğurlu Renk ve Sayı</th>
+                        <td th:text="${ugurluRenk} + '  |  Uğurlu Sayı: ' + ${ugurluSayi}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>Dönem Puan Tablosu</h3>
+            <div class="stat-box" style="margin-bottom:12px;">
+                <div class="stat-label">Aşk ve İlişkiler</div>
+                <div class="stat-value" th:text="'%' + ${askPuani}">%85</div>
+                <div class="progress-track">
+                    <div class="progress-fill" th:style="'width:' + ${askPuani} + '%'"></div>
+                </div>
+            </div>
+            <div class="stat-box" style="margin-bottom:12px;">
+                <div class="stat-label">İş ve Kariyer</div>
+                <div class="stat-value" th:text="'%' + ${kariyerPuani}">%88</div>
+                <div class="progress-track">
+                    <div class="progress-fill" th:style="'width:' + ${kariyerPuani} + '%;background-color:#15803d;'"></div>
+                </div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Genel Enerji ve Sağlık</div>
+                <div class="stat-value" th:text="'%' + ${saglikPuani}">%80</div>
+                <div class="progress-track">
+                    <div class="progress-fill" th:style="'width:' + ${saglikPuani} + '%;background-color:#0e7490;'"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="footer">
+    Luminalis &copy; 2026 — Astroloji, Günlük Burç Yorumları ve Doğum Haritası Platformu
+</div>
+
+</body>
+</html>

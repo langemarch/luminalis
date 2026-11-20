@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Doğum Haritası Hesaplama - Luminalis</title>
+    <link rel="stylesheet" th:href="@{/css/site.css}"/>
+</head>
+<body>
+
+<div class="navbar">
+    <a th:href="@{/}" class="navbar-brand">Luminalis</a>
+    <div class="navbar-links">
+        <a th:href="@{/}">Ana Sayfa</a>
+        <a th:href="@{/burclar}">Burç Yorumları</a>
+        <a th:href="@{/dogum-haritasi}" class="active">Doğum Haritası</a>
+        <a th:href="@{/fal}">Tarot ve Kahve Falı</a>
+        <a th:href="@{/uyum}">İlişki Uyumu</a>
+        <a th:href="@{/gunluk}">Notlarım</a>
+    </div>
+    <div class="navbar-auth">
+        <span th:if="${kullaniciEmail != null}">
+            <span class="user-badge" th:text="${kullaniciEmail}"></span>
+            <form th:action="@{/logout}" method="post" style="display:inline;margin-left:8px;">
+                <button type="submit" class="btn-logout">Çıkış Yap</button>
+            </form>
+        </span>
+        <span th:if="${kullaniciEmail == null}">
+            <a th:href="@{/login}">Giriş Yap</a>
+            <a th:href="@{/kayit}" style="background-color:#15803d;">Kayıt Ol</a>
+        </span>
+    </div>
+</div>
+
+<div class="container">
+    <h1 class="page-title">Doğum Haritası ve Yükselen Burç Hesaplama</h1>
+
+    <div th:if="${kayitMesaji != null}" class="alert-success" th:text="${kayitMesaji}"></div>
+
+    <div class="card">
+        <h3>Doğum Bilgileri Formu</h3>
+        <form th:action="@{/dogum-haritasi}" method="post" style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:14px;align-items:flex-end;">
+            <div class="form-group" style="margin-bottom:0;">
+                <label for="dogumTarihi">Doğum Tarihi</label>
+                <input type="date" id="dogumTarihi" name="dogumTarihi" class="form-control" th:value="${dogumTarihi}" required="required"/>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+                <label for="dogumSaati">Doğum Saati</label>
+                <input type="time" id="dogumSaati" name="dogumSaati" class="form-control" th:value="${dogumSaati}" required="required"/>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+                <label for="dogumYeri">Doğum Şehri (81 İl)</label>
+                <select id="dogumYeri" name="dogumYeri" class="form-control">
+                    <option th:each="s : ${sehirler}" th:value="${s}" th:text="${s}" th:selected="${s == dogumYeri}"></option>
+                </select>
+            </div>
+            <div>
+                <button type="submit" id="haritaHesaplaBtn" class="btn">Haritayı Hesapla</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
+            <h3 style="margin:0;">Harita Değerlendirme Özeti</h3>
+            <span class="badge badge-hava" th:text="${dogumYeri} + ' (' + ${koordinatBilgi} + ')'">İstanbul (41.01° K, 28.98° D)</span>
+        </div>
+        <p th:text="${haritaOzeti}" style="margin-bottom:14px;"></p>
+        <div class="grid-4" style="margin-bottom:16px;">
+            <div class="stat-box">
+                <div class="stat-label">Güneş Burcu</div>
+                <div class="stat-value" style="font-size:20px;" th:text="${gunesBurcu}">Boğa</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Ay Burcu</div>
+                <div class="stat-value" style="font-size:20px;" th:text="${ayBurcu}">Terazi</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Yükselen Burç (ASC)</div>
+                <div class="stat-value" style="font-size:20px;" th:text="${yukselenBurc}">Başak</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Tepe Noktası (MC)</div>
+                <div class="stat-value" style="font-size:20px;" th:text="${tepeNoktasi}">İkizler</div>
+            </div>
+        </div>
+
+        <div class="grid-4">
+            <div class="stat-box">
+                <div class="stat-label">Ateş Elementi</div>
+                <div style="font-weight:700;color:#b91c1c;margin-top:4px;" th:text="'%' + ${atesYuzde}">%20</div>
+                <div class="progress-track"><div class="progress-fill" th:style="'width:' + ${atesYuzde} + '%;background-color:#dc2626;'"></div></div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Toprak Elementi</div>
+                <div style="font-weight:700;color:#166534;margin-top:4px;" th:text="'%' + ${toprakYuzde}">%30</div>
+                <div class="progress-track"><div class="progress-fill" th:style="'width:' + ${toprakYuzde} + '%;background-color:#15803d;'"></div></div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Hava Elementi</div>
+                <div style="font-weight:700;color:#1d4ed8;margin-top:4px;" th:text="'%' + ${havaYuzde}">%30</div>
+                <div class="progress-track"><div class="progress-fill" th:style="'width:' + ${havaYuzde} + '%;background-color:#2563eb;'"></div></div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Su Elementi</div>
+                <div style="font-weight:700;color:#0e7490;margin-top:4px;" th:text="'%' + ${suYuzde}">%20</div>
+                <div class="progress-track"><div class="progress-fill" th:style="'width:' + ${suYuzde} + '%;background-color:#0e7490;'"></div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid-2">
+        <div class="card">
+            <h3>Gezegen Konumları ve Ev Yerleşimleri</h3>
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>Gezegen</th>
+                    <th>Burç</th>
+                    <th>Derece</th>
+                    <th>Ev</th>
+                    <th>Anlamı</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="g : ${gezegenler}">
+                    <td th:text="${g.ad}" style="font-weight:bold;">Güneş</td>
+                    <td th:text="${g.burc}">Boğa</td>
+                    <td th:text="${g.derece}">15°</td>
+                    <td th:text="${g.ev}">1. Ev</td>
+                    <td th:text="${g.aciklama}">Açıklama</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <h3>Gezegenler Arası Temel Açılar</h3>
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>1. Gezegen</th>
+                    <th>2. Gezegen</th>
+                    <th>Açı Türü</th>
+                    <th>Sapma</th>
+                    <th>Yorum</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="a : ${acilar}">
+                    <td th:text="${a.gezegen1}" style="font-weight:bold;">Güneş</td>
+                    <td th:text="${a.gezegen2}" style="font-weight:bold;">Ay</td>
+                    <td th:text="${a.aciTuru}">Üçgen (120°)</td>
+                    <td th:text="${a.orb}">1.6°</td>
+                    <td th:text="${a.etki}">Etki</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="footer">
+    Luminalis &copy; 2026 — Astroloji, Günlük Burç Yorumları ve Doğum Haritası Platformu
+</div>
+
+</body>
+</html>

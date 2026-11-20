@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Notlarım ve Kayıtlı Analizlerim - Luminalis</title>
+    <link rel="stylesheet" th:href="@{/css/site.css}"/>
+</head>
+<body>
+
+<div class="navbar">
+    <a th:href="@{/}" class="navbar-brand">Luminalis</a>
+    <div class="navbar-links">
+        <a th:href="@{/}">Ana Sayfa</a>
+        <a th:href="@{/burclar}">Burç Yorumları</a>
+        <a th:href="@{/dogum-haritasi}">Doğum Haritası</a>
+        <a th:href="@{/fal}">Tarot ve Kahve Falı</a>
+        <a th:href="@{/uyum}">İlişki Uyumu</a>
+        <a th:href="@{/gunluk}" class="active">Notlarım</a>
+    </div>
+    <div class="navbar-auth">
+        <span th:if="${kullaniciEmail != null}">
+            <span class="user-badge" th:text="${kullaniciEmail}"></span>
+            <form th:action="@{/logout}" method="post" style="display:inline;margin-left:8px;">
+                <button type="submit" class="btn-logout">Çıkış Yap</button>
+            </form>
+        </span>
+    </div>
+</div>
+
+<div class="container">
+    <h1 class="page-title">Kişisel Astroloji Günlüğüm ve Kayıtlı Analizlerim</h1>
+
+    <div class="grid-main">
+        <!-- SOL: NOT EKLEME VE LİSTELEME -->
+        <div>
+            <div class="card">
+                <h3>Yeni Not Ekle</h3>
+                <form th:action="@{/gunluk/ekle}" method="post">
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label for="baslik">Tarih / Başlık</label>
+                            <input type="text" id="baslik" name="baslik" class="form-control" th:value="${bugun}" required="required"/>
+                        </div>
+                        <div class="form-group">
+                            <label for="duyguDurumu">Genel Durum</label>
+                            <select id="duyguDurumu" name="duyguDurumu" class="form-control">
+                                <option value="Dengeli">Dengeli</option>
+                                <option value="Mutlu">Mutlu</option>
+                                <option value="Yoğun">Yoğun</option>
+                                <option value="Düşünceli">Düşünceli</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="icerik">Not İçeriği</label>
+                        <textarea id="icerik" name="icerik" rows="3" class="form-control"
+                                  placeholder="Bugünkü gökyüzü ve kişisel gözlemlerinizi buraya kaydedebilirsiniz..." required="required"></textarea>
+                    </div>
+                    <button type="submit" id="notKaydetBtn" class="btn">Notu Kaydet</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h3>Kayıtlı Notlarım</h3>
+                <div th:if="${#lists.isEmpty(notlar)}" class="alert-info">
+                    Henüz kaydedilmiş bir notunuz bulunmuyor.
+                </div>
+                <table class="table" th:if="${!#lists.isEmpty(notlar)}">
+                    <thead>
+                    <tr>
+                        <th>Başlık / Tarih</th>
+                        <th>Durum</th>
+                        <th>Not İçeriği</th>
+                        <th>İşlem</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="n : ${notlar}">
+                        <td th:text="${n.title}" style="font-weight:bold;">2026-11-19</td>
+                        <td th:text="${n.mood}">Dengeli</td>
+                        <td th:text="${n.content}">Not</td>
+                        <td>
+                            <form th:action="@{/gunluk/sil}" method="post" style="display:inline;">
+                                <input type="hidden" name="notId" th:value="${n.id}"/>
+                                <button type="submit" class="btn-sm btn-danger">Sil</button>
+                            </form>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- SAĞ: KAYITLI OKUMALAR -->
+        <div>
+            <div class="card">
+                <h3>Geçmiş Analiz ve Fal Kayıtlarım</h3>
+                <div th:if="${#lists.isEmpty(okumalar)}" class="alert-info">
+                    Henüz kayıtlı bir harita veya fal analiziniz yok.
+                </div>
+                <table class="table" th:if="${!#lists.isEmpty(okumalar)}">
+                    <thead>
+                    <tr>
+                        <th>Tür</th>
+                        <th>Başlık</th>
+                        <th>İşlem</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="o : ${okumalar}">
+                        <td th:text="${o.type}" style="font-weight:bold;"></td>
+                        <td th:text="${o.title}"></td>
+                        <td>
+                            <form th:action="@{/okuma/sil}" method="post" style="display:inline;">
+                                <input type="hidden" name="okumaId" th:value="${o.id}"/>
+                                <button type="submit" class="btn-sm btn-danger">Sil</button>
+                            </form>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="footer">
+    Luminalis &copy; 2026 — Astroloji, Günlük Burç Yorumları ve Doğum Haritası Platformu
+</div>
+
+</body>
+</html>

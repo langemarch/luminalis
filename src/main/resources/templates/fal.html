@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Tarot, Kahve Falı ve Rüya Tabiri - Luminalis</title>
+    <link rel="stylesheet" th:href="@{/css/site.css}"/>
+    <style>
+        .tarot-deck {
+            display: grid;
+            grid-template-columns: repeat(11, 1fr);
+            gap: 8px;
+            margin: 14px 0;
+        }
+        .tarot-card-back {
+            height: 76px;
+            border-radius: 6px;
+            border: 2px solid #1e3a8a;
+            background: linear-gradient(135deg, #1b3266 0%, #2563eb 100%);
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.15s ease, border-color 0.15s ease;
+        }
+        .tarot-card-back:hover {
+            transform: translateY(-4px);
+            border-color: #f59e0b;
+        }
+        .tarot-card-back.selected {
+            background: #15803d;
+            border-color: #14532d;
+            transform: translateY(-5px);
+        }
+        .tarot-result-card {
+            background: #ffffff;
+            border: 2px solid #1b3266;
+            border-radius: 8px;
+            padding: 16px;
+        }
+        .tarot-roman {
+            display: inline-block;
+            background: #1b3266;
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 13px;
+            padding: 3px 10px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+        .symbol-chip {
+            display: inline-block;
+            padding: 4px 10px;
+            margin: 3px 4px 3px 0;
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            color: #1e3a8a;
+            border-radius: 16px;
+            font-size: 12.5px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .symbol-chip:hover {
+            background: #1d4ed8;
+            color: #ffffff;
+        }
+        @media (max-width: 900px) {
+            .tarot-deck { grid-template-columns: repeat(4, 1fr); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="navbar">
+    <a th:href="@{/}" class="navbar-brand">Luminalis</a>
+    <div class="navbar-links">
+        <a th:href="@{/}">Ana Sayfa</a>
+        <a th:href="@{/burclar}">Burç Yorumları</a>
+        <a th:href="@{/dogum-haritasi}">Doğum Haritası</a>
+        <a th:href="@{/fal}" class="active">Tarot ve Kahve Falı</a>
+        <a th:href="@{/uyum}">İlişki Uyumu</a>
+        <a th:href="@{/gunluk}">Notlarım</a>
+    </div>
+    <div class="navbar-auth">
+        <span th:if="${kullaniciEmail != null}">
+            <span class="user-badge" th:text="${kullaniciEmail}"></span>
+            <form th:action="@{/logout}" method="post" style="display:inline;margin-left:8px;">
+                <button type="submit" class="btn-logout">Çıkış Yap</button>
+            </form>
+        </span>
+        <span th:if="${kullaniciEmail == null}">
+            <a th:href="@{/login}">Giriş Yap</a>
+            <a th:href="@{/kayit}" style="background-color:#15803d;">Kayıt Ol</a>
+        </span>
+    </div>
+</div>
+
+<div class="container">
+    <h1 class="page-title">Tarot Açılımı, Kahve Falı ve Rüya Tabiri</h1>
+
+    <!-- SEKME GEÇİŞLERİ -->
+    <div class="filter-bar">
+        <a th:href="@{/fal(sekme='tarot')}" class="filter-pill" th:classappend="${aktifSekme == 'tarot'} ? ' active' : ''">Tarot Açılımı (22 Kartlık Deste)</a>
+        <a th:href="@{/fal(sekme='kahve')}" class="filter-pill" th:classappend="${aktifSekme == 'kahve'} ? ' active' : ''">Kahve Falı (Fincan Fotoğrafı)</a>
+        <a th:href="@{/fal(sekme='ruya')}" class="filter-pill" th:classappend="${aktifSekme == 'ruya'} ? ' active' : ''">Rüya Tabiri ve Sembol Sözlüğü</a>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- 1. SEKME: GERÇEK 22 KARTLIK TAROT DESTESİ                             -->
+    <!-- ===================================================================== -->
+    <div th:if="${aktifSekme == 'tarot'}">
+        <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+                <div>
+                    <h2 style="margin-bottom:4px;">3 Kart Tarot Açılımı (Büyük Arkana Destesi)</h2>
+                    <p class="muted" style="margin-bottom:0;">Niyetinize odaklanın, aşağıdaki 22 kapalı karttan <strong>3 kart seçin</strong> veya rastgele çekin.</p>
+                </div>
+                <button type="button" class="btn-sm" onclick="rastgeleTarotCek()">Rastgele 3 Kart Çek</button>
+            </div>
+
+            <div class="tarot-deck" id="tarotDeck">
+                <button type="button"
+                        class="tarot-card-back"
+                        th:each="k : ${tarotDestesi}"
+                        th:attr="data-no=${k.no}"
+                        onclick="kartSec(this)">
+                    <span th:text="${k.roma}">I</span>
+                    <span style="font-size:10px;opacity:0.85;">Kart</span>
+                </button>
+            </div>
+
+            <form th:action="@{/fal/tarot}" method="post" style="margin-top:14px;">
+                <input type="hidden" id="kart1No" name="kart1No" value="1"/>
+                <input type="hidden" id="kart2No" name="kart2No" value="8"/>
+                <input type="hidden" id="kart3No" name="kart3No" value="19"/>
+
+                <div class="grid-3" style="margin-bottom:12px;">
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label for="tarotKonu">Açılım Konusu</label>
+                        <select id="tarotKonu" name="konu" class="form-control">
+                            <option value="Genel" th:selected="${seciliKonu == 'Genel'}">Genel Yaşam</option>
+                            <option value="Aşk" th:selected="${seciliKonu == 'Aşk'}">Aşk ve İlişkiler</option>
+                            <option value="Kariyer" th:selected="${seciliKonu == 'Kariyer'}">İş ve Kariyer</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label for="niyet">Sorunuz / Niyetiniz (İsteğe Bağlı)</label>
+                        <input type="text" id="niyet" name="niyet" class="form-control" placeholder="Örn: Önümüzdeki ay iş hayatım nasıl ilerler?"/>
+                    </div>
+                    <div style="display:flex;align-items:flex-end;">
+                        <button type="submit" id="tarotBtn" class="btn" style="width:100%;padding:9px;">Seçilen 3 Kartı Aç ve Yorumla</button>
+                    </div>
+                </div>
+                <p id="secimDurumu" class="muted" style="margin-bottom:0;font-weight:600;color:#1b3266;">
+                    Seçili kartlar: 1. Kart (#2), 2. Kart (#9), 3. Kart (#20) — Yukarıdaki desteden tıklayarak değiştirebilirsiniz.
+                </p>
+            </form>
+        </div>
+
+        <div th:if="${tarotKartlari != null}">
+            <div class="grid-3" style="margin-bottom:16px;">
+                <div class="tarot-result-card" th:each="tk : ${tarotKartlari}">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                        <span class="tarot-roman" th:text="${tk.roma}">I</span>
+                        <span class="badge" th:classappend="${tk.yon == 'Düz'} ? ' badge-toprak' : ' badge-ates'" th:text="${tk.yon}">Düz</span>
+                    </div>
+                    <div style="font-size:12px;color:#64748b;font-weight:700;text-transform:uppercase;" th:text="${tk.pozisyon}">1. Kart</div>
+                    <h3 th:text="${tk.ad}" style="margin:4px 0 6px 0;color:#1b3266;">Büyücü</h3>
+                    <p style="font-size:12.5px;color:#475569;margin:0 0 8px 0;">
+                        <strong>Element:</strong> <span th:text="${tk.element}">Hava</span> &bull;
+                        <span th:text="${tk.anahtar}">Anahtar</span>
+                    </p>
+                    <p th:text="${tk.yorum}" style="font-size:13.5px;margin:0 0 8px 0;"></p>
+                    <div class="alert-info" style="margin:0;padding:8px 10px;font-size:13px;" th:text="${tk.konuYorum}"></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Genel Tarot Açılım Sentezi</h3>
+                <p th:text="${tarotSentez}" style="margin-bottom:0;font-size:15px;"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- 2. SEKME: GERÇEK KAHVE FALI (FİNCAN FOTOĞRAFI YÜKLEME VE ANALİZ)      -->
+    <!-- ===================================================================== -->
+    <div th:if="${aktifSekme == 'kahve'}">
+        <div class="grid-main">
+            <div class="card">
+                <h2>Kahve Falı — Fincan Fotoğrafı Yükle ve Yorumla</h2>
+                <p class="muted">Kahve fincanınızın fotoğrafını yükleyin; sistem fincanın ağız, orta ve dip bölgelerindeki telve yoğunluğunu inceleyerek detaylı yorumunuzu hazırlasın.</p>
+
+                <form th:action="@{/fal/kahve}" method="post" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="fincanFoto">Fincan Fotoğrafı (JPG / PNG)</label>
+                        <input type="file" id="fincanFoto" name="fincanFoto" accept="image/*" class="form-control" onchange="fincanOnizle(this)"/>
+                        <img id="fincanOnizleme" alt="Fincan Önizleme" style="display:none;max-height:180px;margin-top:10px;border-radius:6px;border:1px solid #cbd5e1;"/>
+                    </div>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label for="kahveKonu">Yorum Odağı</label>
+                            <select id="kahveKonu" name="konu" class="form-control">
+                                <option value="Genel">Genel Bakış</option>
+                                <option value="Aşk ve İlişkiler">Aşk ve İlişkiler</option>
+                                <option value="İş ve Kariyer">İş ve Kariyer</option>
+                                <option value="Maddi Durum">Maddi Durum ve Kısmet</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="notlar">Niyetiniz / Ek Notunuz (İsteğe Bağlı)</label>
+                            <input type="text" id="notlar" name="notlar" class="form-control" placeholder="Örn: Yakın zamanda taşınma planım var"/>
+                        </div>
+                    </div>
+                    <button type="submit" id="kahveBtn" class="btn">Fincanı İncele ve Kahve Falını Yorumla</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h3>Nasıl Yorumlanır?</h3>
+                <p class="muted">1. Fincanınızı kapattıktan sonra soğumasını bekleyin ve üstten net bir fotoğraf çekin.</p>
+                <p class="muted">2. Fotoğrafı yüklediğinizde sunucu fincanın <strong>Ağız (Yakın Gelecek)</strong>, <strong>Orta (İlişkiler)</strong> ve <strong>Dip (İş &amp; Maddi Durum)</strong> bölgelerini ayrı ayrı analiz eder.</p>
+                <p class="muted" style="margin-bottom:0;">3. Giriş yaptıysanız falınız otomatik olarak <strong>Notlarım</strong> geçmişinize kaydedilir.</p>
+            </div>
+        </div>
+
+        <div class="card" th:if="${kahveAnaliz != null}">
+            <div style="display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap;margin-bottom:14px;">
+                <img th:if="${kahveAnaliz.fotoDataUrl != null}" th:src="${kahveAnaliz.fotoDataUrl}" alt="Yüklenen Fincan"
+                     style="width:160px;height:160px;object-fit:cover;border-radius:8px;border:2px solid #1b3266;"/>
+                <div style="flex:1;min-width:240px;">
+                    <h3 style="margin-bottom:6px;">Kahve Falı Sonucunuz</h3>
+                    <p class="muted" th:text="${kahveAnaliz.fotoBilgi}" style="font-size:13px;margin-bottom:8px;"></p>
+                    <div style="margin-bottom:10px;">
+                        <strong style="font-size:13px;">Fincanda Öne Çıkan Figürler:</strong>
+                        <span th:each="sem : ${kahveAnaliz.semboller}" class="badge badge-hava" style="margin-left:6px;" th:text="${sem}">Yol</span>
+                    </div>
+                    <p th:text="${kahveAnaliz.genelOzet}" style="margin-bottom:0;"></p>
+                </div>
+            </div>
+
+            <div class="grid-3">
+                <div class="card" style="margin-bottom:0;background:#f8fafc;">
+                    <h3 style="font-size:15px;color:#1b3266;">Fincan Ağzı (Yakın Gelecek)</h3>
+                    <p th:text="${kahveAnaliz.ustYorum}" class="muted" style="margin-bottom:0;"></p>
+                </div>
+                <div class="card" style="margin-bottom:0;background:#f8fafc;">
+                    <h3 style="font-size:15px;color:#1b3266;">Fincan Ortası (Aşk ve Sosyal Çevre)</h3>
+                    <p th:text="${kahveAnaliz.ortaYorum}" class="muted" style="margin-bottom:0;"></p>
+                </div>
+                <div class="card" style="margin-bottom:0;background:#f8fafc;">
+                    <h3 style="font-size:15px;color:#1b3266;">Fincan Dibi (İş ve Maddi Durum)</h3>
+                    <p th:text="${kahveAnaliz.dipYorum}" class="muted" style="margin-bottom:0;"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- 3. SEKME: KAPSAMLI RÜYA TABİRİ VE SEMBOL SÖZLÜĞÜ                      -->
+    <!-- ===================================================================== -->
+    <div th:if="${aktifSekme == 'ruya'}">
+        <div class="grid-main">
+            <div class="card">
+                <h2>Detaylı Rüya Tabiri</h2>
+                <p class="muted">Gördüğünüz rüyayı tüm ayrıntılarıyla yazın; sistem metninizdeki rüya sembollerini tek tek ayıklayıp hem <strong>geleneksel</strong> hem <strong>psikolojik</strong> olarak yorumlasın.</p>
+
+                <form th:action="@{/fal/ruya}" method="post">
+                    <div class="form-group">
+                        <label for="ruyaMetni">Rüyanızı Anlatın</label>
+                        <textarea id="ruyaMetni" name="ruyaMetni" rows="5" class="form-control"
+                                  placeholder="Örn: Rüyamda sakin bir deniz kenarında yürürken yerde parlak bir anahtar buldum ve gökyüzünde beyaz kuşlar uçuyordu."
+                                  th:text="${ruyaMetniGirdi}" required="required"></textarea>
+                    </div>
+                    <div style="margin-bottom:12px;">
+                        <span style="font-size:12.5px;color:#475569;font-weight:600;">Sık Görülen Semboller (Tıklayıp ekleyin):</span><br/>
+                        <span class="symbol-chip" onclick="sembolEkle('deniz')">Deniz</span>
+                        <span class="symbol-chip" onclick="sembolEkle('anahtar')">Anahtar</span>
+                        <span class="symbol-chip" onclick="sembolEkle('yol')">Yol</span>
+                        <span class="symbol-chip" onclick="sembolEkle('ev')">Ev</span>
+                        <span class="symbol-chip" onclick="sembolEkle('uçmak')">Uçmak</span>
+                        <span class="symbol-chip" onclick="sembolEkle('altın')">Altın</span>
+                        <span class="symbol-chip" onclick="sembolEkle('kuş')">Kuş</span>
+                        <span class="symbol-chip" onclick="sembolEkle('balık')">Balık</span>
+                        <span class="symbol-chip" onclick="sembolEkle('köprü')">Köprü</span>
+                        <span class="symbol-chip" onclick="sembolEkle('yıldız')">Yıldız</span>
+                        <span class="symbol-chip" onclick="sembolEkle('yağmur')">Yağmur</span>
+                        <span class="symbol-chip" onclick="sembolEkle('bebek')">Bebek</span>
+                        <span class="symbol-chip" onclick="sembolEkle('sınav')">Sınav</span>
+                    </div>
+                    <div class="grid-2" style="align-items:flex-end;">
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label for="ruyaDuygu">Rüyadaki Baskın Duygu</label>
+                            <select id="ruyaDuygu" name="duygu" class="form-control">
+                                <option value="Huzurlu" th:selected="${seciliDuygu == 'Huzurlu'}">Huzurlu</option>
+                                <option value="Meraklı" th:selected="${seciliDuygu == 'Meraklı'}">Meraklı</option>
+                                <option value="Heyecanlı" th:selected="${seciliDuygu == 'Heyecanlı'}">Heyecanlı</option>
+                                <option value="Endişeli" th:selected="${seciliDuygu == 'Endişeli'}">Endişeli</option>
+                                <option value="Şaşkın" th:selected="${seciliDuygu == 'Şaşkın'}">Şaşkın</option>
+                            </select>
+                        </div>
+                        <button type="submit" id="ruyaBtn" class="btn" style="width:100%;padding:9px;">Rüyayı Sembolleriyle Yorumla</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="card">
+                <h3>Rüya Tabiri Rehberi</h3>
+                <p class="muted">Sistem metninizde geçen <strong>40 farklı rüya sembolünü</strong> (deniz, su, yağmur, anahtar, kapı, yol, araba, uçak, ev, merdiven, köprü, altın, para, yüzük, bebek, okul, sınav, yılan, köpek, kedi, kuş, balık, at, ağaç, çiçek, dağ, ateş, güneş, ay, yıldız, diş, ayna, hediye vb.) otomatik algılar.</p>
+                <p class="muted" style="margin-bottom:0;">Hem klasik Türk rüya tabiri geleneğine göre hem de psikolojik bilinçaltı anlamına göre ayrı ayrı sonuç verir.</p>
+            </div>
+        </div>
+
+        <div class="card" th:if="${ruyaAnaliz != null}">
+            <h3>Rüya Tabiri Sonucu</h3>
+            <p th:text="${ruyaAnaliz.genelYorum}" style="font-size:15px;"></p>
+
+            <div th:if="${!#lists.isEmpty(ruyaAnaliz.bulunanSemboller)}" style="margin-top:14px;">
+                <h3 style="font-size:16px;">Rüyanızda Tespit Edilen Semboller ve Anlamları</h3>
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th style="width:130px;">Sembol</th>
+                        <th>Geleneksel Rüya Tabiri</th>
+                        <th>Psikolojik / Bilinçaltı Anlamı</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="s : ${ruyaAnaliz.bulunanSemboller}">
+                        <td th:text="${s.ad}" style="font-weight:bold;color:#1b3266;">Deniz</td>
+                        <td th:text="${s.gelenekselAnlam}"></td>
+                        <td th:text="${s.psikolojikAnlam}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="alert-info" style="margin-top:14px;margin-bottom:0;">
+                <strong>Tavsiye:</strong> <span th:text="${ruyaAnaliz.tavsiye}"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- KAYDEDİLEN SON YORUMLAR -->
+    <div class="card" th:if="${gecmisOkumalar != null and !#lists.isEmpty(gecmisOkumalar)}" style="margin-top:18px;">
+        <h3>Hesabınıza Kaydedilen Son Yorumlar</h3>
+        <table class="table">
+            <thead>
+            <tr>
+                <th style="width:130px;">Tür</th>
+                <th style="width:240px;">Başlık</th>
+                <th>Yorum Özeti</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="o : ${gecmisOkumalar}">
+                <td th:text="${o.type}" style="font-weight:bold;">Tarot</td>
+                <td th:text="${o.title}">Başlık</td>
+                <td th:text="${o.summary}">Özet</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="footer">
+    Luminalis &copy; 2026 — Astroloji, Günlük Burç Yorumları ve Doğum Haritası Platformu
+</div>
+
+<script>
+    let secilenler = [];
+    function kartSec(btn) {
+        const no = parseInt(btn.getAttribute('data-no'), 10);
+        const idx = secilenler.indexOf(no);
+        if (idx >= 0) {
+            secilenler.splice(idx, 1);
+            btn.classList.remove('selected');
+        } else {
+            if (secilenler.length >= 3) {
+                const eski = secilenler.shift();
+                const eskiBtn = document.querySelector('.tarot-card-back[data-no="' + eski + '"]');
+                if (eskiBtn) eskiBtn.classList.remove('selected');
+            }
+            secilenler.push(no);
+            btn.classList.add('selected');
+        }
+        if (secilenler.length === 3) {
+            document.getElementById('kart1No').value = secilenler[0];
+            document.getElementById('kart2No').value = secilenler[1];
+            document.getElementById('kart3No').value = secilenler[2];
+            document.getElementById('secimDurumu').innerText =
+                '3 kart seçildi: Geçmiş (#' + (secilenler[0] + 1) + '), Şimdi (#' + (secilenler[1] + 1) + '), Gelecek (#' + (secilenler[2] + 1) + '). Açılımı başlatabilirsiniz.';
+        } else {
+            document.getElementById('secimDurumu').innerText =
+                secilenler.length + ' / 3 kart seçildi — Lütfen toplam 3 kart seçin.';
+        }
+    }
+
+    function rastgeleTarotCek() {
+        document.querySelectorAll('.tarot-card-back.selected').forEach(b => b.classList.remove('selected'));
+        secilenler = [];
+        while (secilenler.length < 3) {
+            const r = Math.floor(Math.random() * 22);
+            if (!secilenler.includes(r)) secilenler.push(r);
+        }
+        secilenler.forEach(no => {
+            const b = document.querySelector('.tarot-card-back[data-no="' + no + '"]');
+            if (b) b.classList.add('selected');
+        });
+        document.getElementById('kart1No').value = secilenler[0];
+        document.getElementById('kart2No').value = secilenler[1];
+        document.getElementById('kart3No').value = secilenler[2];
+        document.getElementById('secimDurumu').innerText =
+            'Rastgele 3 kart çekildi: Geçmiş (#' + (secilenler[0] + 1) + '), Şimdi (#' + (secilenler[1] + 1) + '), Gelecek (#' + (secilenler[2] + 1) + ').';
+    }
+
+    function fincanOnizle(input) {
+        const img = document.getElementById('fincanOnizleme');
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                img.src = e.target.result;
+                img.style.display = 'block';
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function sembolEkle(kelime) {
+        const ta = document.getElementById('ruyaMetni');
+        if (!ta) return;
+        ta.value = ta.value ? (ta.value.trim() + ' ' + kelime) : ('Rüyamda ' + kelime + ' gördüm');
+        ta.focus();
+    }
+</script>
+
+</body>
+</html>
