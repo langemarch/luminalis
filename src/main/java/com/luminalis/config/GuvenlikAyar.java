@@ -27,7 +27,7 @@ public class GuvenlikAyar implements WebMvcConfigurer {
             "/", "/anasayfa", "/login", "/kayit", "/app", "/app/**",
             "/burclar", "/dogum-haritasi", "/fal", "/fal/**", "/uyum",
             "/css/**", "/js/**",
-            "/api/health", "/api/auth/**", "/api/astrology/**", "/api/ai/**", "/api/chat"
+            "/api/health", "/api/auth/**", "/api/astrology/**", "/api/ai/**", "/api/chat", "/api/ilceler"
     };
 
     private final JwtAuthFilter jwtAuthFilter;

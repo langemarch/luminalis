@@ -18,6 +18,46 @@ public class AstrolojiMotorServis {
             "Terazi", "Akrep", "Yay", "Oğlak", "Kova", "Balık"
     );
 
+    // =========================================================================
+    // GÜNLÜK DİNAMİK BURÇ YORUMLARI (tarihe göre her gün değişir)
+    // =========================================================================
+    private static final String[] GUNLUK_TEMALAR = {
+            "Bugün enerjinizi doğru yönlendirdiğinizde işlerinizin kolaylaştığını fark edeceksiniz. Sabah saatlerinde aldığınız bir haber gününüzü şekillendirebilir.",
+            "İç sesinize kulak vermek için uygun bir gün. Tereddüt ettiğiniz bir konuda netleşmeniz karar sürecinizi hızlandıracak.",
+            "Bugün sosyal çevrenizden destek görebilir, önemli bir görüşmede olumlu sonuç alabilirsiniz. İletişimde açık ve net olmak size avantaj sağlayacak.",
+            "Planlarınızı gözden geçirmek ve önceliklerinizi netleştirmek için verimli bir gün. Küçük adımlarla başlamak büyük ilerleme getirecek.",
+            "Bugün sezgileriniz güçlü. Karşınıza çıkan bir fırsatı değerlendirmek için doğru zamanlama olduğunu hissedeceksiniz.",
+            "Gün içinde beklenmedik bir gelişme planlarınızı etkileyebilir. Esnek olmak ve olaylara farklı açıdan bakmak size kazandıracak.",
+            "Bugün kendinize zaman ayırmanız zihinsel olarak tazelenmenizi sağlayacak. Dinlendikten sonra çözüm bulmanız daha kolay olacak."
+    };
+
+    private static final String[] HAFTALIK_TEMALAR = {
+            "Bu hafta liderlik yeteneğiniz öne çıkıyor. Ekip çalışmalarında yönlendirici olabilir, çevrenizden takdir toplayabilirsiniz.",
+            "Hafta boyunca maddi konularda verimli fırsatlar karşınıza çıkabilir. İş birliklerinde istikrarlı duruşunuz öne çıkacak.",
+            "Bu hafta yeni bilgiler öğrenmek ve yakın çevrenizle fikir alışverişi yapmak ufkunuzu genişletecek.",
+            "Hafta içinde duygusal konularda önemli bir karar netleşebilir. İç huzurunuzu ön planda tutmak size iyi gelecek.",
+            "Bu hafta projelerinizde yaratıcılığınızı öne çıkarabilir, önemli bir sunumda fark yaratabilirsiniz."
+    };
+
+    private static final String[] AYLIK_TEMALAR = {
+            "Bu ay kariyer ve kişisel hedeflerinizde somut ilerleme dönemi. Yeni bir projeye başlamak için uygun zaman.",
+            "Bu ay kendinize ve yaşam kalitenize yatırım yapma zamanı. Uzun vadeli hedeflerinizi netleştirebilirsiniz.",
+            "Bu ay sosyal çevrenizin büyüdüğü, iletişim ve sunum becerilerinizle öne çıktığınız dinamik bir süreç sizi bekliyor.",
+            "Bu ay içsel huzurunuzu güçlendireceğiniz, yaratıcı yeteneklerinizi somut ürünlere dönüştüreceğiniz ilham verici bir dönem."
+    };
+
+    public String gunlukYorumUret(String burc, String donem) {
+        int gun = LocalDate.now().getDayOfYear();
+        int burcIndex = Math.max(0, BURCLAR.indexOf(burc));
+        String[] havuz = switch (donem) {
+            case "Haftalık" -> HAFTALIK_TEMALAR;
+            case "Aylık" -> AYLIK_TEMALAR;
+            default -> GUNLUK_TEMALAR;
+        };
+        int index = Math.floorMod(gun + burcIndex, havuz.length);
+        return havuz[index];
+    }
+
     // Türkiye'nin 81 İli (Alfabetik) + Gerçek Enlem / Boylam Koordinatları
     public record SehirKoordinat(String ad, double enlem, double boylam) {}
 
@@ -114,6 +154,39 @@ public class AstrolojiMotorServis {
                 .filter(s -> s.ad().equalsIgnoreCase(sehir))
                 .findFirst()
                 .orElse(new SehirKoordinat(sehir, 41.01, 28.98));
+    }
+
+    // =========================================================================
+    // İLÇELER (81 ilin tüm ilçeleri, classpath'ten ilceler.json okunur)
+    // =========================================================================
+    private static Map<String, List<String>> IL_ILCELERI;
+
+    private static synchronized Map<String, List<String>> ilcelerHaritasiniYukle() {
+        if (IL_ILCELERI != null) return IL_ILCELERI;
+        Map<String, List<String>> harita = new LinkedHashMap<>();
+        try {
+            java.io.InputStream is = AstrolojiMotorServis.class.getClassLoader().getResourceAsStream("ilceler.json");
+            if (is != null) {
+                byte[] data = is.readAllBytes();
+                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                java.util.Map<String, List<String>> parsed = mapper.readValue(data,
+                        new com.fasterxml.jackson.core.type.TypeReference<java.util.Map<String, List<String>>>() {});
+                harita.putAll(parsed);
+            }
+        } catch (Exception e) {
+            // JSON okunamazsa boş harita döner (uygulama çökmez)
+        }
+        IL_ILCELERI = harita;
+        return harita;
+    }
+
+    public List<String> ilIlceleriniGetir(String il) {
+        if (il == null || il.isBlank()) return List.of();
+        return ilcelerHaritasiniYukle().getOrDefault(il, List.of());
+    }
+
+    public Map<String, List<String>> tumIlIlceleriniGetir() {
+        return ilcelerHaritasiniYukle();
     }
 
     // =========================================================================

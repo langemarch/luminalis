@@ -252,11 +252,7 @@ public class WebSayfaKontrol {
         model.addAttribute("kariyerYorumu", profil.kariyer());
         model.addAttribute("saglikYorumu", profil.saglik());
 
-        String genelYorum = switch (donem) {
-            case "Haftalık" -> profil.haftalik();
-            case "Aylık" -> profil.aylik();
-            default -> profil.gunluk();
-        };
+        String genelYorum = astrolojiMotor.gunlukYorumUret(profil.ad(), donem);
         model.addAttribute("genelYorum", genelYorum);
 
         int seed = Math.abs(Objects.hash(profil.ad(), donem, LocalDate.now().toString()));
@@ -270,10 +266,17 @@ public class WebSayfaKontrol {
     // -------------------------------------------------------------------------
     // 2. DOĞUM HARİTASI (/dogum-haritasi & /dogum-haritasi/hesapla)
     // -------------------------------------------------------------------------
+    @GetMapping("/api/ilceler")
+    @org.springframework.web.bind.annotation.ResponseBody
+    public java.util.Map<String, Object> ilcelerEndpoint(@RequestParam String il) {
+        return java.util.Map.of("il", il, "ilceler", astrolojiMotor.ilIlceleriniGetir(il));
+    }
+
     @GetMapping("/dogum-haritasi")
     public String dogumHaritasiFormu(Model model, Principal principal) {
         ortakModelDoldur(model, principal, "harita");
         model.addAttribute("sehirler", astrolojiMotor.tumSehirAdlari());
+        model.addAttribute("ilceler", astrolojiMotor.ilIlceleriniGetir("İstanbul"));
         haritaHesaplaVeEkle("1998-05-15", "14:30", "İstanbul", model);
         return "dogum-haritasi";
     }
@@ -283,19 +286,27 @@ public class WebSayfaKontrol {
             @RequestParam String dogumTarihi,
             @RequestParam String dogumSaati,
             @RequestParam String dogumYeri,
+            @RequestParam(defaultValue = "") String dogumIlce,
             Model model,
             Principal principal
     ) {
         ortakModelDoldur(model, principal, "harita");
         model.addAttribute("sehirler", astrolojiMotor.tumSehirAdlari());
-        haritaHesaplaVeEkle(dogumTarihi, dogumSaati, dogumYeri, model);
+        model.addAttribute("ilceler", astrolojiMotor.ilIlceleriniGetir(dogumYeri));
+
+        String konum = dogumYeri;
+        if (dogumIlce != null && !dogumIlce.isBlank()) {
+            konum = dogumIlce + ", " + dogumYeri;
+        }
+        final String finalKonum = konum;
+        haritaHesaplaVeEkle(dogumTarihi, dogumSaati, finalKonum, model);
 
         if (principal != null) {
             kullaniciRepository.findByEmail(principal.getName()).ifPresent(k -> {
                 KayitliOkuma okuma = new KayitliOkuma();
                 okuma.setKullanici(k);
                 okuma.setType("Doğum Haritası");
-                okuma.setTitle("Doğum Haritası (" + dogumYeri + " - " + dogumTarihi + " " + dogumSaati + ")");
+                okuma.setTitle("Doğum Haritası (" + finalKonum + " - " + dogumTarihi + " " + dogumSaati + ")");
                 okuma.setSummary(String.valueOf(model.getAttribute("haritaOzeti")));
                 okumaRepository.save(okuma);
                 model.addAttribute("kayitMesaji", "Doğum haritası analizi hesabınıza kaydedildi.");
